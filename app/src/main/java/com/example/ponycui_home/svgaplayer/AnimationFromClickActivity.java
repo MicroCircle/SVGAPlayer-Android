@@ -3,7 +3,6 @@ package com.example.ponycui_home.svgaplayer;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.widget.Toast;
 
 import com.opensource.svgaplayer.SVGAClickAreaListener;
@@ -25,7 +24,7 @@ public class AnimationFromClickActivity extends Activity {
     SVGAImageView animationView = null;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         animationView = new SVGAImageView(this);
         animationView.setOnAnimKeyClickListener(new SVGAClickAreaListener() {

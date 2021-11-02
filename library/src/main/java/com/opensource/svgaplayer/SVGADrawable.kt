@@ -33,11 +33,20 @@ class SVGADrawable(val videoItem: SVGAVideoEntity, val dynamicItem: SVGADynamicE
 
     private val drawer = SVGACanvasDrawer(videoItem, dynamicItem)
 
-    override fun draw(canvas: Canvas?) {
+    var mute = false
+        internal set (value) {
+            if (field == value) {
+                return
+            }
+            field = value
+            drawer.setMute(value);
+        }
+
+    override fun draw(canvas: Canvas) {
         if (cleared) {
             return
         }
-        canvas?.let {
+        canvas.let {
             drawer.drawFrame(it,currentFrame, scaleType)
         }
     }

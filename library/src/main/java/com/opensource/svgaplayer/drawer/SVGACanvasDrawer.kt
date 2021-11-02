@@ -19,6 +19,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
     private val sharedValues = ShareValues()
     private val drawTextCache: HashMap<String, Bitmap> = hashMapOf()
     private val pathCache = PathCache()
+    private var isMute = false
 
     private var beginIndexList: Array<Boolean>? = null
     private var endIndexList: Array<Boolean>? = null
@@ -157,6 +158,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
     private fun playAudio(frameIndex: Int) {
         this.videoItem.audioList.forEach { audio ->
             if (audio.startFrame == frameIndex) {
+                val volume=if(isMute) 0f else 1.0f
                 if (SVGASoundManager.isInit()) {
                     audio.soundID?.let { soundID ->
                         audio.playID = SVGASoundManager.play(soundID)
@@ -164,7 +166,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
                 } else {
                     this.videoItem.soundPool?.let { soundPool ->
                         audio.soundID?.let { soundID ->
-                            audio.playID = soundPool.play(soundID, 1.0f, 1.0f, 1, 0, 1.0f)
+                            audio.playID = soundPool.play(soundID, volume, volume, 1, 0, 1.0f)
                         }
                     }
                 }
@@ -179,6 +181,24 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
                     }
                 }
                 audio.playID = null
+            }
+        }
+    }
+
+    internal fun setMute(isMute: Boolean){
+        if(this.isMute!=isMute){
+            this.isMute=isMute
+            val volume=if(isMute) 0f else 1.0f
+            if (SVGASoundManager.isInit()) {
+                SVGASoundManager.setVolume(volume,this.videoItem);
+            }else{
+                this.videoItem.audioList.forEach { audio ->
+                    this.videoItem.soundPool?.let { soundPool ->
+                        audio.playID?.let {playID ->
+                            soundPool.setVolume(playID,volume,volume)
+                        }
+                    }
+                }
             }
         }
     }
@@ -256,7 +276,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
                 } ?: kotlin.run {
                     textBitmap = Bitmap.createBitmap(drawingBitmap.width, drawingBitmap.height, Bitmap.Config.ARGB_8888)
                     val drawRect = Rect(0, 0, drawingBitmap.width, drawingBitmap.height)
-                    val textCanvas = Canvas(textBitmap)
+                    val textCanvas = Canvas(textBitmap as Bitmap)
                     drawingTextPaint.isAntiAlias = true
                     val fontMetrics = drawingTextPaint.getFontMetrics();
                     val top = fontMetrics.top
@@ -275,7 +295,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
                 it.paint.isAntiAlias = true
 
                 textBitmap = Bitmap.createBitmap(drawingBitmap.width, drawingBitmap.height, Bitmap.Config.ARGB_8888)
-                val textCanvas = Canvas(textBitmap)
+                val textCanvas = Canvas(textBitmap as Bitmap)
                 textCanvas.translate(0f, ((drawingBitmap.height - it.height) / 2).toFloat())
                 it.draw(textCanvas)
                 drawTextCache.put(imageKey, textBitmap as Bitmap)
@@ -305,7 +325,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
                     StaticLayout(it.text, 0, it.text.length, it.paint, drawingBitmap.width, it.alignment, it.spacingMultiplier, it.spacingAdd, false)
                 }
                 textBitmap = Bitmap.createBitmap(drawingBitmap.width, drawingBitmap.height, Bitmap.Config.ARGB_8888)
-                val textCanvas = Canvas(textBitmap)
+                val textCanvas = Canvas(textBitmap as Bitmap)
                 textCanvas.translate(0f, ((drawingBitmap.height - layout.height) / 2).toFloat())
                 layout.draw(textCanvas)
                 drawTextCache.put(imageKey, textBitmap as Bitmap)
@@ -527,7 +547,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
 //            val matteCanvas = shareMatteCanvas as Canvas
 //            matteCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
 //            return matteCanvas
-            return Canvas(sharedMatteBitmap)
+            return Canvas(sharedMatteBitmap  as Bitmap)
         }
     }
 
@@ -548,7 +568,7 @@ internal class SVGACanvasDrawer(videoItem: SVGAVideoEntity, val dynamicItem: SVG
         fun buildPath(shape: SVGAVideoShapeEntity): Path {
             if (!this.cache.containsKey(shape)) {
                 val path = Path()
-                path.set(shape.shapePath)
+                shape.shapePath?.let { path.set(it) }
                 this.cache[shape] = path
             }
             return this.cache[shape]!!

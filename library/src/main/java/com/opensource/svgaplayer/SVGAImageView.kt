@@ -63,6 +63,17 @@ open class SVGAImageView @JvmOverloads constructor(
         attrs?.let { loadAttrs(it) }
     }
 
+    var mute = false
+        set (value) {
+            if (field == value) {
+                return
+            }
+            field = value
+            val drawable = drawable as? SVGADrawable ?: return
+            drawable.mute=value;
+        }
+
+
     private fun loadAttrs(attrs: AttributeSet) {
         val typedArray = context.theme.obtainStyledAttributes(attrs, R.styleable.SVGAImageView, 0, 0)
         loops = typedArray.getInt(R.styleable.SVGAImageView_loopCount, 0)
@@ -154,6 +165,7 @@ open class SVGAImageView @JvmOverloads constructor(
         val drawable = getSVGADrawable() ?: return
         drawable.cleared = false
         drawable.scaleType = scaleType
+        drawable.mute = mute
     }
 
     private fun getSVGADrawable(): SVGADrawable? {

@@ -3,9 +3,11 @@ package com.example.ponycui_home.svgaplayer;
 import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.FrameLayout;
+import android.widget.TextView;
 
 import com.opensource.svgaplayer.SVGAImageView;
 import com.opensource.svgaplayer.SVGAParser;
@@ -23,32 +25,50 @@ public class AnimationFromAssetsActivity extends Activity {
 
     int currentIndex = 0;
     SVGAImageView animationView = null;
+    TextView audioControlView = null;
 
     @Override
-    protected void onCreate(@Nullable Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FrameLayout frameLayout=new FrameLayout(this);
         animationView = new SVGAImageView(this);
         animationView.setBackgroundColor(Color.BLACK);
         animationView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                animationView.stepToFrame(currentIndex++, false);
+                loadAnimation();
+//                animationView.stepToFrame(currentIndex++, false);
             }
         });
-        SVGALogger.INSTANCE.setLogEnabled(true);
-        SVGASoundManager.INSTANCE.init();
         loadAnimation();
-        setContentView(animationView);
+        SVGALogger.INSTANCE.setLogEnabled(true);
+//        SVGASoundManager.INSTANCE.init();
+        frameLayout.addView(animationView,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        audioControlView=new TextView(this);
+        audioControlView.setBackgroundColor(Color.WHITE);
+        audioControlView.setText("AudioOn");
+        audioControlView.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                if(animationView.getMute()){
+                    animationView.setMute(false);
+                    audioControlView.setText("AudioOn");
+                }else{
+                    animationView.setMute(true);
+                    audioControlView.setText("AudioOff");
+                }
+            }
+        });
+        frameLayout.addView(audioControlView,new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        setContentView(frameLayout);
     }
 
     private void loadAnimation() {
         SVGAParser svgaParser = SVGAParser.Companion.shareParser();
 //        String name = this.randomSample();
         //asset jojo_audio.svga  cannot callback
-        String name = "mp3_to_long.svga";
-        Log.d("SVGA", "## name " + name);
         svgaParser.setFrameSize(100, 100);
-        svgaParser.decodeFromAssets(name, new SVGAParser.ParseCompletion() {
+        svgaParser.decodeFromAssets(randomSample(), new SVGAParser.ParseCompletion() {
             @Override
             public void onComplete(@NotNull SVGAVideoEntity videoItem) {
                 Log.e("zzzz", "onComplete: ");

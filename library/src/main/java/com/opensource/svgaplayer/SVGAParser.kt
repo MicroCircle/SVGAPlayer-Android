@@ -205,6 +205,35 @@ class SVGAParser(context: Context?) {
         }
     }
 
+    fun decodeFromFile(
+            filepath: String,
+            key: String,
+            callback: ParseCompletion?,
+            playCallback: PlayCallback? = null
+    ): (() -> Unit)? {
+
+        val cacheKey = SVGACache.buildCacheKey(key);
+        return if (SVGACache.isCached(cacheKey)) {
+            threadPoolExecutor.execute {
+                if (SVGACache.isDefaultCache()) {
+                    this.decodeFromCacheKey(cacheKey, callback, alias = key)
+                } else {
+                    this.decodeFromSVGAFileCacheKey(cacheKey, callback, playCallback, alias = key)
+                }
+            }
+            return null
+        } else {
+            threadPoolExecutor.execute {
+                try {
+                    this.decodeFromInputStream(FileInputStream(filepath), cacheKey, callback,true);
+                }catch (e: java.lang.Exception) {
+                    this.invokeErrorCallback(e, callback,alias = filepath)
+                }
+            }
+            return null
+        }
+    }
+
     /**
      * 读取解析本地缓存的 svga 文件.
      */
